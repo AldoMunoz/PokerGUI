@@ -6,6 +6,7 @@ import java.util.*;
 public class Hand {
     //hole cards
     private Card[] playerCards;
+    //communityCards
     private ArrayList<Card> communityCards;
     //enum with the hand strength, x High to Royal
     private HandRanks handRanking;
@@ -21,16 +22,18 @@ public class Hand {
 
     //will return the HandRanks enum of the players hand
     public HandRanks getHandRanking() {
-        //puts the player & community cards in one list, sorts them hi-lo
+        //Creates array of cards, adds player cards and community cards to the array
         Card[] cards = new Card[playerCards.length+communityCards.size()];
         cards[0] = playerCards[0];
         cards[1] = playerCards[1];
         for (int i = 2; i < communityCards.size()+2; i++) {
             cards[i] = communityCards.get(i-2);
         }
+
+        //Sorts the cards from Hi->Lo
         reverseInsertionSort(cards);
 
-        //goes through hand ranks from hi to lo to find the best possible hand
+        //Goes through hand ranks from hi->lo to find the best possible hand
         if (isRoyalFlush(cards)) {
             handRanking = HandRanks.ROYAL_FLUSH;
             return handRanking;
@@ -89,7 +92,6 @@ public class Hand {
         }
     }
 
-    //DONE
     private boolean isRoyalFlush(Card[] cards) {
         //checks is a flush exists, and if the last card of that flush is a 10
         if(isFlush(cards) && getFiveCardHand()[4].getVal() == 10) return true;
@@ -103,6 +105,7 @@ public class Hand {
         int spades = 0;
         int hearts = 0;
         int diamonds = 0;
+        //targetSuit = 'x' acts as null
         char targetSuit = 'x';
 
         //for loop will count occurrences of a suit, break when minimum of 5 is reached
@@ -203,7 +206,7 @@ public class Hand {
                 setFiveCardHand(quads);
                 return true;
             }
-            //increases count is same value card is found
+            //increases count if same value card is found
             else if(cards[i].getVal() == currVal && count < 3) count++;
             //current card is not the same as previous, count is reset
             else {

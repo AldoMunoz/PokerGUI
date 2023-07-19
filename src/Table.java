@@ -19,7 +19,7 @@ public class Table {
     //private final int ante;
 
 
-    //instantiates table
+    //initiates table
     public Table (char tableType, int seatCount, int[] stakes, String gameType) {
         this.tableType = tableType;
         this.seatCount = seatCount;
@@ -38,11 +38,12 @@ public class Table {
     //adds a player to the players list, gives them a chip count and a specific seat
     public void addPlayer (Player player, int seat, int chipCount) {
         if (players[seat] == null) players[seat] = player;
-        if(++playerCount > 1) {
+        /*if(++playerCount > 1) {
             setBlinds();
             runGame();
-        }
+        }*/
         player.setChipCount(chipCount);
+        playerCount++;
     }
 
     public void removePlayer(int seat) {
@@ -50,25 +51,30 @@ public class Table {
         if(--playerCount >= 2) setBlinds();
     }
 
+    //sets the BB and SB
     private void setBlinds () {
         for (int i = players.length-1; i >= 0; i--) {
             if(players[i] == null) continue;
             else {
-                if(bigBlind == -1) bigBlind = i;
+                if(smallBlind == -1) smallBlind = i;
                 else {
-                    smallBlind = i;
+                    bigBlind = i;
                     break;
                 }
             }
         }
     }
 
+    //moves the BB and SB to the next player
     private void moveBlinds() {
+        //SB is set to person who was just BB
         smallBlind = bigBlind;
-        for (int i = (bigBlind+1)%players.length; i < players.length; i = (i+1)%players.length) {
+        //rotates clockwise using modulus until the next player is found, assigns them the BB
+        for (int i = ((bigBlind-1 % players.length) + players.length) % players.length; i < players.length; i = (i-1)%players.length) {
             if (players[i] == null) continue;
             else {
                 bigBlind = i;
+                break;
             }
         }
     }
@@ -83,7 +89,7 @@ public class Table {
             moveBlinds();
             dealCards();
             initiatePot();
-            preFlopBetting();
+            //preFlopBetting();
             dealFlop();
             getHandVals();
             //postFlopBetting();
@@ -94,13 +100,13 @@ public class Table {
             //postFlopBetting();
             getHandVals();
             //completeHand();
+            clearTable();
         }
     }
 
     //deals cards preflop to all players
-    //TODO the amount of cards dealt will change if the game is PLO, for example
     public void dealCards () {
-        //the deck will be orgnized in a random order before the round starts
+        //the deck will be orgnazied in a random order before the round starts
         deck.shuffleCards();
 
         //deals cards to every seat with an active player in it
@@ -118,13 +124,17 @@ public class Table {
 
     //deals the flop out
     public void dealFlop () {
+        //adds 3 cards (flop) to the board
         board.add(deck.drawCard());
         board.add(deck.drawCard());
         board.add(deck.drawCard());
 
+
+        //iterates through players, gets their hand ranking, and sets it
         for (int i = 0; i < players.length; i++) {
             if (players[i] != (null)) {
 
+                //creates new Hand and assigns it to the player
                 Hand hand = new Hand(players[i].getHoleCards(), board);
                 players[i].setHand(hand);
                 players[i].getHand().getHandRanking();
@@ -146,7 +156,7 @@ public class Table {
 
     //collects blinds and adds them to the pot
     private void initiatePot () {
-        //big blind collection
+        //BB collection
         if (players[bigBlind].getChipCount() > stakes[1]) {
             pot += stakes[1];
             players[bigBlind].setChipCount(players[bigBlind].getChipCount()-stakes[1]);
@@ -157,7 +167,7 @@ public class Table {
             players[bigBlind].setChipCount(0);
         }
 
-        //small blind collection
+        //SB collection
         if (players[smallBlind].getChipCount() > stakes[0]) {
             pot += stakes[0];
             players[smallBlind].setChipCount(players[smallBlind].getChipCount()-stakes[0]);
@@ -180,11 +190,13 @@ public class Table {
         boolean actionOver = false;
         while (actionOver == false) {
             if(players[currPlayer] == null) continue;
+            //TODO complete betting round code
 
 
         }
     }
 
+    //Goes through the list of players and reassigns Hand after turn and river
     public void getHandVals() {
         for (int i = 0; i < players.length; i++) {
             if (players[i] != (null)) {
@@ -193,6 +205,7 @@ public class Table {
         }
     }
 
+    //Resets Player Hands, the Table board, and rejoins dead cards with to the deck
     public void clearTable() {
         for (int i = 0; i < players.length; i++) {
             if (players[i] != (null)) {
