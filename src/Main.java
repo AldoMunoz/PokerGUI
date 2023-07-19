@@ -14,8 +14,6 @@ public class Main {
         table1.addPlayer(player2, 1, 10000);
         table1.addPlayer(player3, 3, 10000);
 
-        System.out.println("test");
-        System.out.println(0-1%6);
         table1.runGame();
     }
 }

@@ -157,7 +157,7 @@ public class Hand {
               count++;
             }
             //checks if the current card is one value lower than the previous one
-            else if (cards[i].getVal()+1 == strFlush[count-1].getVal()) {
+            else if (cards[i].getVal()+1 == cards[count-1].getVal()) {
                 count++;
                 strFlush[count] = cards[i];
             }

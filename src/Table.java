@@ -38,22 +38,47 @@ public class Table {
     //adds a player to the players list, gives them a chip count and a specific seat
     public void addPlayer (Player player, int seat, int chipCount) {
         if (players[seat] == null) players[seat] = player;
-        /*if(++playerCount > 1) {
-            setBlinds();
-            runGame();
-        }*/
+
         player.setChipCount(chipCount);
         playerCount++;
     }
 
+    //removes player at the giver seat
     public void removePlayer(int seat) {
         players[seat] = null;
-        if(--playerCount >= 2) setBlinds();
+    }
+
+    //gathers and executes all the functions needed to run ring poker game
+    public void runGame() {
+        //starts the game and sets the blinds
+        if (isRunning == false) {
+            setBlinds();
+            isRunning = true;
+        }
+
+        //game will run while there are at least 2 people seated at the table
+        while (playerCount > 1) {
+            moveBlinds();
+            dealCards();
+            initiatePot();
+            //TODO preFlopBetting();
+            dealFlop();
+            getHandVals();
+            //TODO postFlopBetting();
+            dealTurnOrRiver();
+            //TODO postFlopBetting();
+            getHandVals();
+            dealTurnOrRiver();
+            //TODO postFlopBetting();
+            getHandVals();
+            //TODO completeHand();
+            clearTable();
+        }
     }
 
     //sets the BB and SB
     private void setBlinds () {
-        for (int i = players.length-1; i >= 0; i--) {
+        for (int i = 0; i < players.length; i++) {
             if(players[i] == null) continue;
             else {
                 if(smallBlind == -1) smallBlind = i;
@@ -70,37 +95,12 @@ public class Table {
         //SB is set to person who was just BB
         smallBlind = bigBlind;
         //rotates clockwise using modulus until the next player is found, assigns them the BB
-        for (int i = ((bigBlind-1 % players.length) + players.length) % players.length; i < players.length; i = (i-1)%players.length) {
+        for (int i = (bigBlind+1) % players.length; i < players.length; i = (i+1)%players.length) {
             if (players[i] == null) continue;
             else {
                 bigBlind = i;
                 break;
             }
-        }
-    }
-
-    public void runGame() {
-        if (isRunning == false) {
-            setBlinds();
-            isRunning = true;
-        }
-
-        while (playerCount > 1) {
-            moveBlinds();
-            dealCards();
-            initiatePot();
-            //preFlopBetting();
-            dealFlop();
-            getHandVals();
-            //postFlopBetting();
-            dealTurn();
-            //postFlopBetting();
-            getHandVals();
-            dealRiver();
-            //postFlopBetting();
-            getHandVals();
-            //completeHand();
-            clearTable();
         }
     }
 
@@ -129,7 +129,6 @@ public class Table {
         board.add(deck.drawCard());
         board.add(deck.drawCard());
 
-
         //iterates through players, gets their hand ranking, and sets it
         for (int i = 0; i < players.length; i++) {
             if (players[i] != (null)) {
@@ -142,14 +141,8 @@ public class Table {
         }
     }
 
-    //deals the turn
-    public void dealTurn () {
-        board.add(deck.drawCard());
-        getHandVals();
-    }
-
-    //deals the river
-    public void dealRiver () {
+    //deals the turn or river card
+    public void dealTurnOrRiver () {
         board.add(deck.drawCard());
         getHandVals();
     }
@@ -182,6 +175,7 @@ public class Table {
     //deals with the pre-flop betting rounds
     public void preFlopBetting () {
         //pre-flop betting starts at the player to the left of the big blind
+        //TODO following code might pick an empty seat, fix
         int currPlayer = (bigBlind+1) % players.length;
         //following two values are used to calculate min bet size, which will always be lastBet-secLastBet
         int lastBet = stakes[1];
@@ -191,12 +185,10 @@ public class Table {
         while (actionOver == false) {
             if(players[currPlayer] == null) continue;
             //TODO complete betting round code
-
-
         }
     }
 
-    //Goes through the list of players and reassigns Hand after turn and river
+    //Goes through the list of players and reassigns Hand value after turn and river
     public void getHandVals() {
         for (int i = 0; i < players.length; i++) {
             if (players[i] != (null)) {
