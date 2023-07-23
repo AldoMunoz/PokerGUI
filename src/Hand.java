@@ -369,8 +369,8 @@ public class Hand {
         this.fiveCardHand = cards;
     }
 
-    //TODO set private
-    public Card[] getFiveCardHand () {
+
+    private Card[] getFiveCardHand () {
         return fiveCardHand;
     }
 
