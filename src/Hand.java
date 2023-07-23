@@ -96,96 +96,35 @@ public class Hand {
         //checks is a flush exists, and if the last card of that flush is a 10
         if(isFlush(cards) && getFiveCardHand()[4].getVal() == 10) return true;
         return false;
-     }
+    }
 
-    private boolean isStraightFlush (Card[] cards) {
-        //first check to see if flush exists, and designates target suit.
-        //this is done to solve ordinal problems
-        int clubs = 0;
-        int spades = 0;
-        int hearts = 0;
-        int diamonds = 0;
-        //targetSuit = 'x' acts as null
-        char targetSuit = 'x';
+    private boolean isStraightFlush(Card[] cards) {
+         //checks is flush exists
+         if(isFlush(cards));
+         else return false;
 
-        //for loop will count occurrences of a suit, break when minimum of 5 is reached
-        for (int i = 0; i < cards.length; i++) {
-            if (cards[i].getSuit() == 's') {
-                if (spades == 4) {
-                    targetSuit = 's';
-                    break;
-                }
-                spades++;
-            }
-            else if (cards[i].getSuit() == 'c') {
-                if (clubs == 4) {
-                    targetSuit = 'c';
-                    break;
-                }
-                clubs++;
-            }
-            else if (cards[i].getSuit() == 'h') {
-                if (hearts == 4) {
-                    targetSuit = 'h';
-                    break;
-                }
-                hearts++;
-            }
-            else if (cards[i].getSuit() == 'd') {
-                if (diamonds == 4) {
-                    targetSuit = 'd';
-                    break;
-                }
-                diamonds++;
-            }
-        }
+         //checks edge case for a wheel straight flush
+         if (fiveCardHand[0].getVal() == 14 && fiveCardHand[1].getVal() == 5) {
+             //if true, shifts all items to left
+             //[A,5,4,3,2] -> [5,4,3,2,A]
+             Card temp = fiveCardHand[0];
+             for (int i = 1; i < fiveCardHand.length; i++) {
+                 fiveCardHand[i-1] = fiveCardHand[i];
+             }
+             fiveCardHand[fiveCardHand.length-1] = temp;
 
-        //if there is no flush, then we can return false here
-        if(targetSuit == 'x') return false;
-
-        //if not, array is made to return straight flush if found
-        Card[] strFlush = new Card[5];
-        int count = 0;
-
-        for (int i = 0; i < cards.length; i++) {
-            //if the current card is not the target suit, we will ignore this card
-            if(cards[i].getSuit() != targetSuit) continue;
-
-            //find starting (highest) value card in the straight flush
-            if(count == 0) {
-              strFlush[count] = cards[i];
-              count++;
-            }
-            //checks if the current card is one value lower than the previous one
-            else if (cards[i].getVal()+1 == cards[count-1].getVal()) {
-                count++;
-                strFlush[count] = cards[i];
-            }
-            //if not, count is reset, current card is the new highest card
-            else {
-                count = 0;
-                strFlush = new Card[5];
-                strFlush[count] = cards[i];
-            }
-
-            //if count reaches 4, then the straight flush is complete
-            if(count == 4) {
-                setFiveCardHand(strFlush);
-                return true;
-            }
-        }
-
-        //edge case, checks for straight flush wheel
-        if(count == 3 && cards[3].getVal() == 2) {
-            for (int i = 0; i < 4; i++) {
-                if(cards[i].getVal() == 14 && cards[i].getSuit() == targetSuit) {
-                    strFlush[4] = cards[i];
-                    setFiveCardHand(strFlush);
-                    return true;
-                }
-            }
-        }
-        return false;
+             return true;
+         }
+         //else, check for normal straight flush
+         else {
+             //checks if the 5 cards in the flush are in descending order
+             for (int i = 1; i < fiveCardHand.length; i++) {
+                 if(fiveCardHand[i].getVal()+1 == fiveCardHand[i-1].getVal());
+                 //if card is not 1 less than previous, return false
+                 else return false;
+             }
+             return true;
+         }
     }
 
     private boolean isQuads(Card[] cards) {
@@ -425,11 +364,13 @@ public class Hand {
         fiveCardHand = Arrays.copyOfRange(cards, 0, 5);
     }
 
+
     private void setFiveCardHand (Card[] cards) {
         this.fiveCardHand = cards;
     }
 
-    private Card[] getFiveCardHand () {
+    //TODO set private
+    public Card[] getFiveCardHand () {
         return fiveCardHand;
     }
 
