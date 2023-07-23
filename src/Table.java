@@ -1,4 +1,7 @@
 import java.util.ArrayList;
+import java.util.Scanner;
+
+import static java.lang.Math.min;
 
 //each table is a specific game with a specific # of seats
 //players can sit at the seats
@@ -15,6 +18,7 @@ public class Table {
     private Deck deck;
     private int bigBlind;
     private int smallBlind;
+    private int currentBet;
     private boolean isRunning;
     //private final int ante;
 
@@ -61,15 +65,15 @@ public class Table {
             moveBlinds();
             dealCards();
             initiatePot();
-            //TODO preFlopBetting();
+            preFlopBetting();
             dealFlop();
             getHandVals();
-            //TODO postFlopBetting();
+            postFlopBetting();
             dealTurnOrRiver();
-            //TODO postFlopBetting();
+            postFlopBetting();
             getHandVals();
             dealTurnOrRiver();
-            //TODO postFlopBetting();
+            postFlopBetting();
             getHandVals();
             //TODO completeHand();
             clearTable();
@@ -104,9 +108,10 @@ public class Table {
         }
     }
 
+    //
     //deals cards preflop to all players
     public void dealCards () {
-        //the deck will be orgnazied in a random order before the round starts
+        //the deck will be organized in a random order before the round starts
         deck.shuffleCards();
 
         //deals cards to every seat with an active player in it
@@ -173,19 +178,93 @@ public class Table {
     }
 
     //deals with the pre-flop betting rounds
-    public void preFlopBetting () {
+    public void preFlopBetting() {
         //pre-flop betting starts at the player to the left of the big blind
         //TODO following code might pick an empty seat, fix
-        int currPlayer = (bigBlind+1) % players.length;
-        //following two values are used to calculate min bet size, which will always be lastBet-secLastBet
-        int lastBet = stakes[1];
-        int secLastBet = 0;
-
-        boolean actionOver = false;
-        while (actionOver == false) {
-            if(players[currPlayer] == null) continue;
-            //TODO complete betting round code
+        players[smallBlind].setCurrentBet(stakes[0]);
+        players[bigBlind].setCurrentBet(stakes[1]);
+        int currPlayer = (bigBlind + 1) % players.length;
+        while (players[currPlayer] == null) {
+            currPlayer = (currPlayer + 1) % players.length;
         }
+        currentBet = stakes[1];
+        boolean actionOver = false;
+        while (!actionOver) {
+            if(players[currPlayer] == null) {currPlayer = (currPlayer + 1) % players.length; continue;}
+            //TODO complete betting round code
+            else if (players[currPlayer].getCurrentBet() == currentBet && currentBet > stakes[1]) actionOver = true;
+            else if (players[currPlayer].getCurrentBet() == stakes[1] && currPlayer != bigBlind) actionOver = true;
+            else {
+                System.out.println("current bet is: " + currentBet);
+                System.out.println("your bet: ");
+                Scanner sc = new Scanner(System.in);
+                int bet = sc.nextInt();
+                if (bet < 2 * currentBet) {
+                    if (currPlayer == bigBlind && currentBet == stakes[1] && bet == 0) {currPlayer = (currPlayer + 1) %
+                            players.length; continue;
+                    } else if (players[currPlayer].getChipCount() < currentBet) {
+                        bet = players[currPlayer].getChipCount();
+                    } else if (bet > currentBet) {
+                        bet = 2 * currentBet;
+                    } else if (bet != 0) {
+                        bet = currentBet;
+                    } else {players[currPlayer] = null; currPlayer = (currPlayer + 1) % players.length; continue;}
+                }
+                players[currPlayer].setChipCount(
+                        players[currPlayer].getChipCount() - (bet - players[currPlayer].getCurrentBet()));
+                pot += (bet - players[currPlayer].getCurrentBet());
+                players[currPlayer].setCurrentBet(bet);
+                currentBet = bet;
+                currPlayer = (currPlayer + 1) % players.length;
+            }
+        }
+    }
+    public void postFlopBetting() {
+        int button = (smallBlind - 1) % players.length;
+        int currPlayer = smallBlind;
+        while (players[currPlayer] == null) currPlayer = (currPlayer + 1) % players.length;
+        int firstToAct = currPlayer;
+        currentBet = 0;
+        for (Player player : players) {
+            if (player != null) player.setCurrentBet(0);
+        }
+        boolean actionOver = false;
+        boolean firstAction = true;
+        while (!actionOver) {
+            if (players[currPlayer] == null) {
+                currPlayer = (currPlayer + 1) % players.length;
+                continue;
+            }
+            //TODO complete betting round code
+            if (players[currPlayer].getCurrentBet() == currentBet && currentBet > 0) actionOver = true;
+            else if (currPlayer == firstToAct && currentBet == 0 && !firstAction) actionOver = true;
+            else {
+                System.out.println("current bet is: " + currentBet);
+                System.out.println("your bet: ");
+                Scanner sc = new Scanner(System.in);
+                int bet = sc.nextInt();
+                if (bet < 2 * currentBet) {
+                    if (currPlayer == bigBlind && currentBet == stakes[1] && bet == 0) {currPlayer = (currPlayer + 1) %
+                            players.length; continue;
+                    } else if (players[currPlayer].getChipCount() < currentBet) {
+                        bet = players[currPlayer].getChipCount();
+                    } else if (bet > currentBet) {
+                        bet = 2 * currentBet;
+                    } else if (bet != 0) {
+                        bet = currentBet;
+                    } else {players[currPlayer] = null; currPlayer = (currPlayer + 1) % players.length; continue;}
+                }
+                players[currPlayer].setChipCount(
+                        players[currPlayer].getChipCount() - (bet - players[currPlayer].getCurrentBet()));
+                pot += (bet - players[currPlayer].getCurrentBet());
+                players[currPlayer].setCurrentBet(bet);
+                currentBet = bet;
+                currPlayer = (currPlayer + 1) % players.length;
+            }
+        }
+    }
+    public void completeHand() {
+
     }
 
     //Goes through the list of players and reassigns Hand value after turn and river

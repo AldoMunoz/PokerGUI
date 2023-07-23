@@ -9,11 +9,13 @@ public class Player {
     //checks to see if player is live in the hand
     private boolean inHand;
     //true when player is sitting
+    private int currentBet;
+    //player's current bet
     private boolean isActive;
     //TODO shot-clock and time bank
 
     public Player(String username, int chipTotal) {
-        this.username = username;
+        this.username = username; currentBet = 0;
     }
 
     //sets a players hand
@@ -44,6 +46,8 @@ public class Player {
     public void setChipCount(int chipCount) {
         this.chipCount = chipCount;
     }
+    public void setCurrentBet(int bet) {currentBet = bet;}
+    public int getCurrentBet() {return currentBet;}
 
     public void setIsActive (boolean isActive) {
         this.isActive = isActive;
