@@ -3,7 +3,7 @@ import java.util.ArrayList;
 public class Player {
     private String username;
     private int chipCount;
-    private Card[] holeCards;
+    private Card[] holeCards; 
     //player's made hand
     private Hand hand;
     //checks to see if player is live in the hand
