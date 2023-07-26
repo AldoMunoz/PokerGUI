@@ -179,7 +179,7 @@ public class Table {
 
     //deals with the pre-flop betting rounds
     public void preFlopBetting() {
-        //pre-flop betting starts at the player to the left of the big blind
+        // pre-flop betting starts at the player to the left of the big blind
         //TODO following code might pick an empty seat, fix
         players[smallBlind].setCurrentBet(stakes[0]);
         players[bigBlind].setCurrentBet(stakes[1]);

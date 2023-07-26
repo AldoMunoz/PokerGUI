@@ -18,7 +18,7 @@ public class Player {
         this.username = username; currentBet = 0;
     }
 
-    //sets a players hand
+    // sets a players hand
     public void setHoleCards (Card[] cards) {
         this.holeCards = cards;
     }
