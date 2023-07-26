@@ -264,7 +264,12 @@ public class Table {
         }
     }
     public void completeHand() {
+        for (Player player : players) {
+            if (player == null) continue;
+            else {
 
+            }
+        }
     }
 
     //Goes through the list of players and reassigns Hand value after turn and river

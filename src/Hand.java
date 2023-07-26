@@ -425,11 +425,11 @@ public class Hand {
         fiveCardHand = Arrays.copyOfRange(cards, 0, 5);
     }
 
-    private void setFiveCardHand (Card[] cards) {
+    public void setFiveCardHand (Card[] cards) {
         this.fiveCardHand = cards;
     }
 
-    private Card[] getFiveCardHand () {
+    public Card[] getFiveCardHand () {
         return fiveCardHand;
     }
 
