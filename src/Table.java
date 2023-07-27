@@ -20,6 +20,7 @@ public class Table {
     private int smallBlind;
     private int currentBet;
     private boolean isRunning;
+    private HandComparer handComparer;
     //private final int ante;
 
 
@@ -29,7 +30,6 @@ public class Table {
         this.seatCount = seatCount;
         this.stakes = stakes;
         this.gameType = gameType;
-
         players = new Player[seatCount];
         board = new ArrayList<Card>();
         playerCount = 0;
@@ -180,7 +180,6 @@ public class Table {
     //deals with the pre-flop betting rounds
     public void preFlopBetting() {
         // pre-flop betting starts at the player to the left of the big blind
-        //TODO following code might pick an empty seat, fix
         players[smallBlind].setCurrentBet(stakes[0]);
         players[bigBlind].setCurrentBet(stakes[1]);
         int currPlayer = (bigBlind + 1) % players.length;
@@ -191,7 +190,6 @@ public class Table {
         boolean actionOver = false;
         while (!actionOver) {
             if(players[currPlayer] == null) {currPlayer = (currPlayer + 1) % players.length; continue;}
-            //TODO complete betting round code
             else if (players[currPlayer].getCurrentBet() == currentBet && currentBet > stakes[1]) actionOver = true;
             else if (players[currPlayer].getCurrentBet() == stakes[1] && currPlayer != bigBlind) actionOver = true;
             else {
@@ -235,7 +233,6 @@ public class Table {
                 currPlayer = (currPlayer + 1) % players.length;
                 continue;
             }
-            //TODO complete betting round code
             if (players[currPlayer].getCurrentBet() == currentBet && currentBet > 0) actionOver = true;
             else if (currPlayer == firstToAct && currentBet == 0 && !firstAction) actionOver = true;
             else {
@@ -263,13 +260,26 @@ public class Table {
             }
         }
     }
+
+    //TODO find the winning hand at showdown, complete psuedocode below
     public void completeHand() {
+        //iterate through players
+        //ArrayList<Player> bestHand - track highest hand (should be arrayList because unfixed size, and to account for 2+ people having the same hand)
         for (Player player : players) {
             if (player == null) continue;
             else {
-
+                //getHandRanking() for current player
+                //if > bestHand.get(0), bestHand.clear(), and reassign to current player
+                //else if == bestHand.get(0) bestHand.add()
             }
         }
+        //if bestHand.size() = 1, award that player the pot
+        //if bestHand.size() > 1,
+            //handComparer = new HandComparer(bestHand);
+            //TODO complete logic for HandComparer
+            //Player[] x = handComparer.findBestHand();
+            //x cam still be multiple people at this point (chop pot)
+            //award all players in x their portion of the pot
     }
 
     //Goes through the list of players and reassigns Hand value after turn and river
