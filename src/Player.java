@@ -55,5 +55,5 @@ public class Player {
 
     public void setInHand (boolean inHand) { this.inHand = inHand; }
 
-
+    public boolean getInHand() {return inHand;}
 }

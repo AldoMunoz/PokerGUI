@@ -180,9 +180,10 @@ public class Table {
     //deals with the pre-flop betting rounds
     public void preFlopBetting() {
         // pre-flop betting starts at the player to the left of the big blind
-        //TODO following code might pick an empty seat, fix
         players[smallBlind].setCurrentBet(stakes[0]);
         players[bigBlind].setCurrentBet(stakes[1]);
+        // Initializes currPlayer index to be one more than the big blind, wrapping around players.length and
+        // skipping any nulls
         int currPlayer = (bigBlind + 1) % players.length;
         while (players[currPlayer] == null) {
             currPlayer = (currPlayer + 1) % players.length;
@@ -190,8 +191,10 @@ public class Table {
         currentBet = stakes[1];
         boolean actionOver = false;
         while (!actionOver) {
-            if(players[currPlayer] == null) {currPlayer = (currPlayer + 1) % players.length; continue;}
-            //TODO complete betting round code
+            // skips any empty seats or folded players
+            if(players[currPlayer] == null || !players[currPlayer].getInHand()) {currPlayer = (currPlayer + 1)
+                    % players.length; continue;}
+            // moves on to the flop if any of these conditions are met
             else if (players[currPlayer].getCurrentBet() == currentBet && currentBet > stakes[1]) actionOver = true;
             else if (players[currPlayer].getCurrentBet() == stakes[1] && currPlayer != bigBlind) actionOver = true;
             else {
@@ -199,6 +202,8 @@ public class Table {
                 System.out.println("your bet: ");
                 Scanner sc = new Scanner(System.in);
                 int bet = sc.nextInt();
+                // if block handling cases where a bet is less than a min-raise. Assumes a bet of 0 is a fold and a bet
+                // equaling the current bet is a call
                 if (bet < 2 * currentBet) {
                     if (currPlayer == bigBlind && currentBet == stakes[1] && bet == 0) {currPlayer = (currPlayer + 1) %
                             players.length; continue;
@@ -208,8 +213,9 @@ public class Table {
                         bet = 2 * currentBet;
                     } else if (bet != 0) {
                         bet = currentBet;
-                    } else {players[currPlayer] = null; currPlayer = (currPlayer + 1) % players.length; continue;}
+                    } else {players[currPlayer].setInHand(false); currPlayer = (currPlayer + 1) % players.length; continue;}
                 }
+                // handles cases where a bet is at least a min-raise
                 players[currPlayer].setChipCount(
                         players[currPlayer].getChipCount() - (bet - players[currPlayer].getCurrentBet()));
                 pot += (bet - players[currPlayer].getCurrentBet());
@@ -221,6 +227,8 @@ public class Table {
     }
     public void postFlopBetting() {
         int button = (smallBlind - 1) % players.length;
+        // Initializes currPlayer index to be the small blind, wrapping around players.length and
+        // skipping any nulls
         int currPlayer = smallBlind;
         while (players[currPlayer] == null) currPlayer = (currPlayer + 1) % players.length;
         int firstToAct = currPlayer;
@@ -231,11 +239,12 @@ public class Table {
         boolean actionOver = false;
         boolean firstAction = true;
         while (!actionOver) {
-            if (players[currPlayer] == null) {
+            // skips any empty seats or folded players
+            if (players[currPlayer] == null || !players[currPlayer].getInHand()) {
                 currPlayer = (currPlayer + 1) % players.length;
                 continue;
             }
-            //TODO complete betting round code
+            // moves on to the next street if any of these conditions are met
             if (players[currPlayer].getCurrentBet() == currentBet && currentBet > 0) actionOver = true;
             else if (currPlayer == firstToAct && currentBet == 0 && !firstAction) actionOver = true;
             else {
@@ -243,6 +252,8 @@ public class Table {
                 System.out.println("your bet: ");
                 Scanner sc = new Scanner(System.in);
                 int bet = sc.nextInt();
+                // if block handling cases where a bet is less than a min-raise. Assumes a bet of 0 is a fold and a bet
+                // equaling the current bet is a call
                 if (bet < 2 * currentBet) {
                     if (currPlayer == bigBlind && currentBet == stakes[1] && bet == 0) {currPlayer = (currPlayer + 1) %
                             players.length; continue;
@@ -252,8 +263,11 @@ public class Table {
                         bet = 2 * currentBet;
                     } else if (bet != 0) {
                         bet = currentBet;
-                    } else {players[currPlayer] = null; currPlayer = (currPlayer + 1) % players.length; continue;}
+                    } else {players[currPlayer].setInHand(false); currPlayer = (currPlayer + 1) % players.length;
+                        continue;
+                    }
                 }
+                // handles cases where a bet is at least a min-raise
                 players[currPlayer].setChipCount(
                         players[currPlayer].getChipCount() - (bet - players[currPlayer].getCurrentBet()));
                 pot += (bet - players[currPlayer].getCurrentBet());
@@ -264,11 +278,72 @@ public class Table {
         }
     }
     public void completeHand() {
+        // Initializing the best made hand rank
+        HandRanks max_rank = null;
         for (Player player : players) {
             if (player == null) continue;
-            else {
-
+            if (max_rank == null) max_rank = player.getHand().getHandRanking();
+            else if (player.getHand().getHandRanking().getRanking() > max_rank.getRanking())
+                max_rank = player.getHand().getHandRanking();
+        }
+        // Appending all players with hand rank equal to the max rank
+        ArrayList<Player> potential_winners = new ArrayList();
+        for (Player player : players) {
+            if (player.getHand().getHandRanking() == max_rank) potential_winners.add(player);
+        }
+        /*
+        * Algorithm for determining the winners of the pot and awarding winnings:
+        *   - Iterate through all players in the potential_winners array list.
+        *   - Initialize winners to contain the first player in potential_winners if it's empty, then continue.
+        *   - If the max_rank is a straight or straight-flush, we compare only the second cards in the hands of the curr
+        * player in potential_winners and the first player in winners. This still works because for any straight or
+        * straight-flush, the second card in the hand can be used to determine the strength of it. This takes care of
+        * the case where one player has a wheel straight or straight flush and a different player has a better straight
+        * but with a lower first card.
+        *   - Otherwise, we will potentially compare every card in the hands of the first player in winners and the
+        * current player in potential_winners. If the first player in winners has a greater card value, we move on to
+        * the next player in potential_winners. If all the cards are equal value, we add the player to winners. Else we
+        * clear the winners array list and initialize it with the current player in potential_winners.
+        *   - After iterating through potential winners, we add pot / size(winners) to each player's stack in winners.
+        *  NOTE: This ignores potential side pots and assumes the pot is evenly divisible by the number of winners,
+        * which is often not the case.
+        */
+        ArrayList<Player> winners = new ArrayList<>();
+        for (Player player : potential_winners) {
+            boolean isStraightOrStraightFlush = max_rank == HandRanks.STRAIGHT
+                    || max_rank == HandRanks.STRAIGHT_FLUSH;
+            if (winners.size() == 0) {winners.add(player); continue;}
+            int hand_pos = 0;
+            boolean decided = false;
+            while (hand_pos < 5 && !decided) {
+                int currWinnerVal = winners.get(0).getHand().getFiveCardHand()[hand_pos].getVal();
+                int currPlayerVal = player.getHand().getFiveCardHand()[hand_pos].getVal();
+                if (isStraightOrStraightFlush) {
+                    if (hand_pos == 0) {
+                        currWinnerVal = winners.get(0).getHand().getFiveCardHand()[1].getVal();
+                        currPlayerVal = player.getHand().getFiveCardHand()[1].getVal();
+                        hand_pos = 1;
+                    }
+                }
+                if (currWinnerVal > currPlayerVal) decided = true;
+                else if (currWinnerVal == currPlayerVal) {
+                    if (isStraightOrStraightFlush) {
+                        hand_pos = 5;
+                        break;
+                    }
+                    hand_pos ++;
+                }
+                else {
+                    winners.clear();
+                    decided = true;
+                }
             }
+            if (decided) {
+                if (winners.size() == 0) winners.add(player);
+            } else if (hand_pos == 5) winners.add(player);
+        }
+        for (Player winner : winners) {
+            winner.setChipCount(winner.getChipCount() + (pot / winners.size()));
         }
     }
 
