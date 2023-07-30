@@ -1,8 +1,6 @@
 import java.util.ArrayList;
 import java.util.Scanner;
 
-import static java.lang.Math.min;
-
 //each table is a specific game with a specific # of seats
 //players can sit at the seats
 //table also functions as a dealer, dealing cards and collecting/calculating the pot
