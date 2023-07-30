@@ -75,7 +75,7 @@ public class Table {
             dealTurnOrRiver();
             postFlopBetting();
             getHandVals();
-            //TODO completeHand();
+            completeHand();
             clearTable();
         }
     }
