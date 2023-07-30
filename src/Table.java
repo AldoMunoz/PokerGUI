@@ -65,17 +65,17 @@ public class Table {
             moveBlinds();
             dealCards();
             initiatePot();
-            preFlopBetting();
+            //preFlopBetting();
             dealFlop();
             getHandVals();
-            postFlopBetting();
+            //postFlopBetting();
             dealTurnOrRiver();
-            postFlopBetting();
+            //postFlopBetting();
             getHandVals();
             dealTurnOrRiver();
-            postFlopBetting();
+            //postFlopBetting();
             getHandVals();
-            //TODO completeHand();
+            completeHand();
             clearTable();
         }
     }
@@ -179,10 +179,13 @@ public class Table {
 
     //deals with the pre-flop betting rounds
     public void preFlopBetting() {
+        for (Player player : players) {
+            if (player != null) player.setInHand(true);
+        }
         // pre-flop betting starts at the player to the left of the big blind
         players[smallBlind].setCurrentBet(stakes[0]);
         players[bigBlind].setCurrentBet(stakes[1]);
-        // Initializes currPlayer index to be one more than the big blind, wrapping around players.length and
+        // initializes currPlayer index to be one more than the big blind, wrapping around players.length and
         // skipping any nulls
         int currPlayer = (bigBlind + 1) % players.length;
         while (players[currPlayer] == null) {
@@ -211,7 +214,7 @@ public class Table {
                         bet = players[currPlayer].getChipCount();
                     } else if (bet > currentBet) {
                         bet = 2 * currentBet;
-                    } else if (bet != 0) {
+                    } else if (bet == currentBet || bet != 0) {
                         bet = currentBet;
                     } else {players[currPlayer].setInHand(false); currPlayer = (currPlayer + 1) % players.length; continue;}
                 }
@@ -261,7 +264,7 @@ public class Table {
                         bet = players[currPlayer].getChipCount();
                     } else if (bet > currentBet) {
                         bet = 2 * currentBet;
-                    } else if (bet != 0) {
+                    } else if (bet == currentBet || bet != 0) {
                         bet = currentBet;
                     } else {players[currPlayer].setInHand(false); currPlayer = (currPlayer + 1) % players.length;
                         continue;
@@ -289,59 +292,37 @@ public class Table {
         // Appending all players with hand rank equal to the max rank
         ArrayList<Player> potential_winners = new ArrayList();
         for (Player player : players) {
-            if (player.getHand().getHandRanking() == max_rank) potential_winners.add(player);
+            if (player != null && player.getHand().getHandRanking() == max_rank) potential_winners.add(player);
         }
-        /*
-        * Algorithm for determining the winners of the pot and awarding winnings:
-        *   - Iterate through all players in the potential_winners array list.
-        *   - Initialize winners to contain the first player in potential_winners if it's empty, then continue.
-        *   - If the max_rank is a straight or straight-flush, we compare only the second cards in the hands of the curr
-        * player in potential_winners and the first player in winners. This still works because for any straight or
-        * straight-flush, the second card in the hand can be used to determine the strength of it. This takes care of
-        * the case where one player has a wheel straight or straight flush and a different player has a better straight
-        * but with a lower first card.
-        *   - Otherwise, we will potentially compare every card in the hands of the first player in winners and the
-        * current player in potential_winners. If the first player in winners has a greater card value, we move on to
-        * the next player in potential_winners. If all the cards are equal value, we add the player to winners. Else we
-        * clear the winners array list and initialize it with the current player in potential_winners.
-        *   - After iterating through potential winners, we add pot / size(winners) to each player's stack in winners.
-        *  NOTE: This ignores potential side pots and assumes the pot is evenly divisible by the number of winners,
-        * which is often not the case.
-        */
+        // Initialize winners and find winner(s) within potential_winners array list
         ArrayList<Player> winners = new ArrayList<>();
         for (Player player : potential_winners) {
-            boolean isStraightOrStraightFlush = max_rank == HandRanks.STRAIGHT
-                    || max_rank == HandRanks.STRAIGHT_FLUSH;
             if (winners.size() == 0) {winners.add(player); continue;}
             int hand_pos = 0;
             boolean decided = false;
+            // Comparing cards at index hand_pos within the current player in potential_winners and the
+            // first player in winners
             while (hand_pos < 5 && !decided) {
                 int currWinnerVal = winners.get(0).getHand().getFiveCardHand()[hand_pos].getVal();
                 int currPlayerVal = player.getHand().getFiveCardHand()[hand_pos].getVal();
-                if (isStraightOrStraightFlush) {
-                    if (hand_pos == 0) {
-                        currWinnerVal = winners.get(0).getHand().getFiveCardHand()[1].getVal();
-                        currPlayerVal = player.getHand().getFiveCardHand()[1].getVal();
-                        hand_pos = 1;
-                    }
-                }
                 if (currWinnerVal > currPlayerVal) decided = true;
-                else if (currWinnerVal == currPlayerVal) {
-                    if (isStraightOrStraightFlush) {
-                        hand_pos = 5;
-                        break;
-                    }
-                    hand_pos ++;
-                }
+                else if (currWinnerVal == currPlayerVal) hand_pos ++;
                 else {
                     winners.clear();
                     decided = true;
                 }
             }
+            // decided is true in two cases: we have found a better hand or a worse hand. winners array list is updated
+            // to just contain the current player in potential_winners if their hand is better, otherwise we continue to
+            // the next iteration since a player with a worse hand will not be a winner.
             if (decided) {
                 if (winners.size() == 0) winners.add(player);
-            } else if (hand_pos == 5) winners.add(player);
+            }
+            // if we iterated through the whole hand and decided is false, then we know the current player in
+            // potential_winners has an equal strength hand to the current winner(s), so that player is added.
+            else if (hand_pos == 5) winners.add(player);
         }
+        // Chip stacks of players in winners are updated to contain pot/winners.size() additional chips.
         for (Player winner : winners) {
             winner.setChipCount(winner.getChipCount() + (pot / winners.size()));
         }
@@ -365,5 +346,6 @@ public class Table {
         }
         board = new ArrayList<Card>();
         deck.joinDeck();
+        pot = 0;
     }
 }
